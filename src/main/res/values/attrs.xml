@@ -19,5 +19,7 @@
         <attr name="YaxisTextInterval" format="dimension" />
         <attr name="YaxisTableInterval" format="dimension" />
         <attr name="TableNameInterval" format="dimension" />
+        <attr name="PointRadius" format="dimension" />
+        <attr name="PointBorderWidth" format="dimension" />
     </declare-styleable>
 </resources>

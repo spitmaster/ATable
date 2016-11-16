@@ -69,6 +69,10 @@ public class ATable extends View {
                 mYaxisTextInterval = a.getDimension(R.styleable.ATable_YaxisTextInterval, sp2px(8));
             } else if (attr == R.styleable.ATable_TableNameInterval) {
                 mTableNameInterval = a.getDimension(R.styleable.ATable_TableNameInterval, sp2px(4));
+            } else if (attr == R.styleable.ATable_PointRadius) {
+                pointRadius = a.getDimension(R.styleable.ATable_PointRadius, 8);
+            } else if (attr == R.styleable.ATable_PointBorderWidth) {
+                pointBorderWidth = a.getDimension(R.styleable.ATable_PointBorderWidth, 4);
             }
         }
         a.recycle();
@@ -90,7 +94,9 @@ public class ATable extends View {
     private int mPointColor = Color.GREEN;  //点的颜色
     private int mPointBorderColor = Color.WHITE;    //点的边缘的颜色
     private int mGridLineColor = Color.GRAY;  //网格线的颜色
-    private int mGridLineStyle = GRIDLINE_SYTLE_DASH;   //网格线的式样
+    private int mGridLineStyle = GRIDLINE_SYTLE_FULL;   //网格线的式样
+    private float pointRadius = sp2px(8);
+    private float pointBorderWidth = 4;
 
     private float mYaxisTextInterval = sp2px(8); //纵坐标刻度文字的间隔;按sp来算吧
     private float mYaxisTableInterval = sp2px(4);//纵坐标刻度文字与表格之间的间隔
@@ -178,6 +184,16 @@ public class ATable extends View {
         if (YaxisTextSize < 0) YaxisTextSize = 0;
         this.mYaxisTextSize = YaxisTextSize;
         invalidate();
+    }
+
+    public void setPointBorderWidth(float pointBorderWidth) {
+        if (pointBorderWidth < 0) pointBorderWidth = 0;
+        this.pointBorderWidth = pointBorderWidth;
+    }
+
+    public void setPointRadius(float pointRadius) {
+        if (pointRadius < 0) pointRadius = 0;
+        this.pointRadius = pointRadius;
     }
 
     public void setData(int[] data) {
@@ -303,13 +319,15 @@ public class ATable extends View {
         canvas.save();
         float left = getPaddingLeft() + getBigestNumberWidth() + mYaxisTableInterval + blockWidth / 2;
         canvas.translate(left, getPaddingTop());
+        mPaint.setPathEffect(null);
+        mPaint.setStrokeWidth(pointBorderWidth);
         for (PointF p : dataPoints) {
             mPaint.setColor(mPointColor);
             mPaint.setStyle(Paint.Style.FILL);
-            canvas.drawCircle(p.x, p.y, 10, mPaint);
+            canvas.drawCircle(p.x, p.y, pointRadius, mPaint);
             mPaint.setColor(mPointBorderColor);
             mPaint.setStyle(Paint.Style.STROKE);
-            canvas.drawCircle(p.x, p.y, 10, mPaint);
+            canvas.drawCircle(p.x, p.y, pointRadius, mPaint);
         }
         canvas.restore();
     }
@@ -471,7 +489,8 @@ public class ATable extends View {
                 mPaint.setPathEffect(null);
                 break;
             case GRIDLINE_SYTLE_NONE:
-                return;
+                mPaint.setColor(Color.TRANSPARENT);
+                break;
         }
         canvas.save();
         float left = getPaddingLeft() + getBigestNumberWidth() + mYaxisTableInterval;
