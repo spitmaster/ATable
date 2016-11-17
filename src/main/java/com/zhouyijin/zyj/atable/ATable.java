@@ -94,7 +94,7 @@ public class ATable extends View {
     private int mPointColor = Color.GREEN;  //点的颜色
     private int mPointBorderColor = Color.WHITE;    //点的边缘的颜色
     private int mGridLineColor = Color.GRAY;  //网格线的颜色
-    private int mGridLineStyle = GRIDLINE_SYTLE_FULL;   //网格线的式样
+    private int mGridLineStyle = GRIDLINE_SYTLE_DASH;   //网格线的式样
     private float pointRadius = sp2px(8);
     private float pointBorderWidth = 4;
 
@@ -228,10 +228,10 @@ public class ATable extends View {
         return result;
     }
 
-    private int getFontHeight(float px) {
+    private float getFontHeight(float px) {
         mPaint.setTextSize(px);
         Paint.FontMetrics fm = mPaint.getFontMetrics();
-        return (int) Math.ceil(fm.descent - fm.ascent);
+        return fm.descent - fm.ascent;
     }
 
 
@@ -245,7 +245,7 @@ public class ATable extends View {
                 break;
             default:
                 float wordWidth = getBigestXaxisNameWidth();
-                float numberWidth = getBigestNumberWidth();
+                float numberWidth = getBigestNumberWidth() + mYaxisTableInterval;
                 float width = wordWidth * mXaxisNames.length
                         + numberWidth + getPaddingLeft() + getPaddingRight();
                 if (size != 0) result = (int) Math.min(width, size);
@@ -265,7 +265,7 @@ public class ATable extends View {
             float wordWidth = getWordWidth(w, mYaxisTextSize);
             if (wordWidth > x) x = wordWidth;
         }
-        return x + mYaxisTableInterval;
+        return x;
     }
 
     private float getBigestXaxisNameWidth() {     //获取横坐标最大的一个刻度名字的长度
@@ -313,6 +313,7 @@ public class ATable extends View {
         mPaint.setPathEffect(null);
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
+        mPaint.setTextAlign(Paint.Align.CENTER);
     }
 
     private void drawPoint(Canvas canvas) {
@@ -403,14 +404,15 @@ public class ATable extends View {
         float height = getMeasuredHeight() - getPaddingTop() - mTableNameInterval - getFontHeight(mXaxisNameSize) - getPaddingBottom();
         int blockCount = scales.length + 1;
         blockHeight = height / blockCount;
-        float firstScaleY = height - blockHeight;
-        float firstScaleTextY = firstScaleY + getFontHeight(mYaxisTextSize) / 2;
         mPaint.setTextSize(mYaxisTextSize);
         mPaint.setColor(mYaxisTextColor);
+        float firstScaleY = height - blockHeight;
+        float firstScaleTextY = getFontBaselineY(firstScaleY, mPaint);
+        float centerX = getBigestNumberWidth() / 2;
         for (int i = 0; i < scales.length; i++) {
             String scaleText = String.valueOf(scales[i]);
             float y = firstScaleTextY - blockHeight * i;
-            canvas.drawText(scaleText, 0, y, mPaint);
+            canvas.drawText(scaleText, centerX, y, mPaint);
         }
         canvas.restore();
     }
@@ -460,18 +462,18 @@ public class ATable extends View {
         float perWidth = width / mXaxisNames.length;
         mPaint.setTextSize(mXaxisNameSize);
         mPaint.setColor(mXaxisNameColor);
-        float drawedWidth = 0;
-        for (String word : mXaxisNames) {
-            float wordWidth = mPaint.measureText(word);
-            if (wordWidth > perWidth) {
-                float dotWidth = mPaint.measureText("...");
-                float x = drawedWidth + (perWidth - dotWidth) / 2;
-                canvas.drawText("...", x, height, mPaint);
+
+        float centerY = height - getFontHeight(mXaxisNameSize) / 2;
+        float textY = getFontBaselineY(centerY, mPaint);
+
+        for (int i = 0; i < mXaxisNames.length; i++) {
+            float wordWidth = mPaint.measureText(mXaxisNames[i]);
+            float wordCenterX = perWidth * i + perWidth / 2;
+            if (wordWidth < perWidth) {
+                canvas.drawText(mXaxisNames[i], wordCenterX, textY, mPaint);
             } else {
-                float x = drawedWidth + (perWidth - wordWidth) / 2;
-                canvas.drawText(word, x, height, mPaint);
+                canvas.drawText("...", wordCenterX, textY, mPaint);
             }
-            drawedWidth += perWidth;
         }
         canvas.restore();
     }
@@ -606,5 +608,10 @@ public class ATable extends View {
     private float sp2px(float sp) {
         final float fontScale = getContext().getResources().getDisplayMetrics().scaledDensity;
         return sp * fontScale;
+    }
+
+    private float getFontBaselineY(float centerY, Paint mPaint) {
+        Paint.FontMetrics fm = mPaint.getFontMetrics();
+        return centerY + (fm.descent - fm.ascent) / 2 - fm.descent;
     }
 }
